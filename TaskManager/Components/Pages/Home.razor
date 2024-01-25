@@ -1,0 +1,141 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject IHandleJson handleJson
+@inject NavigationManager navManager
+
+<PageTitle>Blazor Calendar V 1.0</PageTitle>
+<div class="container">
+    <div class="row" style="width: 100%;">
+        <div class="col-md-1">
+            <button @onclick="prevMonth" class="btn btn-primary">&lt;</button>
+        </div>
+        <div class="col-md-10 text-center">
+            <h4>@currentMonth.ToString("MMMM yyyy")</h4>
+        </div>
+        <div class="col-md-1">
+            <button @onclick="NextMonth" class="btn btn-primary">&gt;</button>
+        </div>
+    </div>
+</div>
+<div class="table-responsive">
+    <table class="table text-center" style="width: 100%;">
+        <thead>
+            <tr>
+                @foreach (var day in Enum.GetValues(typeof(DayOfWeek)).Cast<DayOfWeek>().OrderBy(d => d == DayOfWeek.Sunday ? 7 : (int)d))
+                {
+                    <th>@day.ToString()</th>
+                }
+            </tr>
+        </thead>
+         <tbody>
+            @foreach (var week in calendar)
+            {
+                <tr>
+                    @foreach (var day in week)
+                    {
+                        <td>
+                            @day.ToString("    dd    ") <br/>
+                            @foreach(var task in monthTasks!)
+                            {
+                                if (DateTime.Parse(task.taskSetupDate).ToString("dd") == @day.ToString("dd"))
+                                {
+                                    @task.TaskName
+                                    <br/>
+                                }
+                            }
+                            <button @onclick="HandlenewTask"><FontAwesomeIcon Icon="@FontAwesome.TableList" /></button>
+                        </td>
+                    }
+                </tr>
+            }            
+        </tbody>
+    </table>
+</div>
+
+
+@code{
+    private DateTime currentMonth = DateTime.Now;
+    private List<UserTask> userTasks = new();
+    private List<UserTask>? monthTasks;
+    private int daysInMonth = DateTime.DaysInMonth(DateTime.Now.Year, DateTime.Now.Month);
+    private List<List<DateTime>> calendar = new();
+
+    protected override void OnInitialized() {
+        userTasks = handleJson.readJsonData();
+        InitializeCalendar();
+    } 
+
+    private void InitializeCalendar()
+    {
+        DateTime startDate = DateTime.Parse(currentMonth.Year + "/" + currentMonth.Month + "/" + "01");
+        int lastDayofMonth = DateTime.DaysInMonth(currentMonth.Year, currentMonth.Month);
+        DateTime endDate = DateTime.Parse(currentMonth.Year + "/" + currentMonth.Month + "/" + lastDayofMonth);
+        calendar = GenerateCalendar(startDate, endDate);
+        LoadMonthTasks();
+    }
+
+    private void NextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        InitializeCalendar();
+    }
+
+    private void prevMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+        InitializeCalendar();
+    }
+
+    private List<List<DateTime>> GenerateCalendar(DateTime startDate, DateTime endDate)
+    {
+        List<List<DateTime>> calendar = new List<List<DateTime>>();
+        List<DateTime> weekDays;
+        DateTime currentDate = startDate;
+        while (currentDate <= endDate)
+        {
+            weekDays = new List<DateTime>();
+            // Handle the case where the month doesn't start on Monday
+            while (currentDate.DayOfWeek != DayOfWeek.Monday)
+            {
+                currentDate = currentDate.AddDays(-1); // Move to the previous day
+            }
+            // Generate days for the current week
+            for (int i = 0; i < 7 && currentDate <= endDate; i++)
+            {
+                weekDays.Add(currentDate);
+                currentDate = currentDate.AddDays(1); // Move to the next day
+            }
+            // If there are remaining days and the month didn't end on a Sunday
+            if (weekDays.Count < 7 && currentDate >= endDate)
+            {
+                while (currentDate.DayOfWeek != DayOfWeek.Monday)
+                {
+                    weekDays.Add(currentDate);
+                    currentDate = currentDate.AddDays(1); // Move to the next day
+                }
+            }
+            calendar.Add(weekDays);
+        }
+        return calendar;
+    }
+
+    private void LoadMonthTasks() {
+        monthTasks = new();
+        monthTasks = userTasks.FindAll(task =>
+        {
+            DateTime taskScheduleDate = DateTime.Parse(task.taskScheduleDate);
+            return taskScheduleDate.ToString("MM") == currentMonth.ToString("MM") && taskScheduleDate.ToString("yyyy") == currentMonth.ToString("yyyy");
+        });
+        Console.WriteLine("Month Tasks");
+        foreach (var task in monthTasks)
+        {
+            Console.WriteLine(task.TaskName);
+        }
+    }
+
+    private void HandlenewTask() {
+        navManager.NavigateTo("/addnewtask");
+    }
+}
+
+

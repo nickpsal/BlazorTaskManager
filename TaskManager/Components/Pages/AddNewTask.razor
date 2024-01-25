@@ -1,0 +1,85 @@
+﻿@page "/addnewtask"
+@rendermode InteractiveServer
+@inject IHandleJson handleJson
+@inject IJSRuntime JSRuntime
+@inject NavigationManager navManager
+
+
+<h3>Add New Task Form</h3>
+
+<EditForm Model="@formData" OnValidSubmit="HandleFormSubmit" formname="newTaskForm">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label for="TaskName">Task Name:</label>
+        <InputText id="TaskName" @bind-Value="formData.TaskName" class="form-control" />
+        <ValidationMessage For="@(() => formData.TaskName)" />
+    </div>
+    <div class="form-group">
+        <label for="TaskDesc">Task Desc:</label>
+        <InputText id="TaskDesc" @bind-Value="formData.TaskDesc" class="form-control" />
+        <ValidationMessage For="@(() => formData.TaskDesc)" />
+    </div>
+     <div class="form-group">
+        <label for="taskSetupDate">task Setup Date:</label>
+        <InputDate id="taskSetupDate" @bind-Value="formData.taskSetupDate" class="form-control" />
+        <ValidationMessage For="@(() => formData.taskSetupDate)" />
+    </div>
+    <div class="form-group">
+        <label for="taskScheduleDate">task Schedule Date:</label>
+        <InputDate id="taskScheduleDate" @bind-Value="formData.taskScheduleDate" class="form-control" />
+        <ValidationMessage For="@(() => formData.taskScheduleDate)" />
+    </div>
+    <div class="form-group">
+        <label for="StartTime">Start Time (24 Hour):</label>
+        <InputText id="StartTime" @bind-Value="formData.StartTime" class="form-control" />
+        <ValidationMessage For="@(() => formData.StartTime)" />
+    </div>
+    <div class="form-group">
+        <label for="EndTime">End Time (24 Hour):</label>
+        <InputText id="EndTime" @bind-Value="formData.EndTime" class="form-control" />
+        <ValidationMessage For="@(() => formData.EndTime)" />
+    </div>
+    <button class="btn btn-primary" type="submit">Submit</button>
+</EditForm>
+
+@code {
+    private FormData formData = new();
+    private class FormData {
+        [Required(ErrorMessage = "Name is required")]
+        public string TaskName { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Task Desc is required")]
+        public string TaskDesc { get; set; } = string.Empty;
+        [Required(ErrorMessage = "task Setup Date is required")]
+        public DateTime taskSetupDate { get; set; } = DateTime.Now;
+        [Required(ErrorMessage = "task Schedule Date is required")]
+        public DateTime taskScheduleDate { get; set; } = DateTime.Now;
+        [Required(ErrorMessage = "Start Time is required")]
+        public string StartTime { get; set; } = string.Empty;
+        [Required(ErrorMessage = "End Time is required")]
+        public string EndTime { get; set; } = string.Empty;
+    }
+
+    private void HandleFormSubmit() 
+    {
+        if (DateTime.TryParse(formData.StartTime, out DateTime CheckStartTime) && DateTime.TryParse(formData.EndTime, out DateTime CheckEndTime))
+        {
+            string name = formData.TaskName;
+            string desc = formData.TaskDesc;
+            string SetupDate = formData.taskSetupDate.ToString("dd/MM/yyyy");
+            string ScheduleDate = formData.taskScheduleDate.ToString("dd/MM/yyyy");
+            string start = CheckStartTime.ToString("HH:mm");
+            string end = CheckEndTime.ToString("HH:mm");
+            UserTask newTask = new UserTask(name, desc, SetupDate, ScheduleDate, start, end);
+            handleJson.savetoJson(newTask);
+            navManager.NavigateTo("/");
+        }
+        if (!DateTime.TryParse(formData.StartTime, out CheckStartTime))
+        {
+            JSRuntime.InvokeVoidAsync("showPopup", "Warning You dont enter valid Start time");
+        }
+        if (!DateTime.TryParse(formData.EndTime, out CheckEndTime))
+        {
+            JSRuntime.InvokeVoidAsync("showPopup", "Warning You dont enter valid End time");
+        }
+    }
+}
