@@ -3,7 +3,7 @@
 @rendermode InteractiveServer
 
 <h3>EditTask</h3>
-<EditForm Model="@formData" OnValidSubmit="HandleFormSubmit" formname="newTaskForm">
+<EditForm Model="@formData" formname="newTaskForm">
     <DataAnnotationsValidator />
     <div class="form-group">
         <label for="TaskName">Task Name:</label>
@@ -35,7 +35,7 @@
         <InputText id="EndTime" @bind-Value="formData.EndTime" class="form-control" />
         <ValidationMessage For="@(() => formData.EndTime)" />
     </div>
-    <button class="btn btn-primary" type="submit">Update</button>
+    <button class="btn btn-primary" @onclick="HandleFormUpdate" type="submit">Update</button>
     <button class="btn btn-primary" type="submit">Delete</button>
 </EditForm>
 
@@ -70,7 +70,7 @@
         formData.EndTime = task.TaskDesc;
     }
 
-    private void HandleFormSubmit()
+    private void HandleFormUpdate()
     {
         
     }
