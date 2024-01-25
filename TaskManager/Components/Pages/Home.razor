@@ -43,7 +43,10 @@
                                     <br/>
                                 }
                             }
-                            <button @onclick="HandlenewTask"><FontAwesomeIcon Icon="@FontAwesome.TableList" /></button>
+                            @if (DateTime.Now.CompareTo(day) <= 0)
+                            {
+                                <button @onclick='() => HandlenewTask(day.ToString("dd"))'><FontAwesomeIcon Icon="@FontAwesome.TableList" /></button>
+                            }
                         </td>
                     }
                 </tr>
@@ -126,15 +129,16 @@
             DateTime taskScheduleDate = DateTime.Parse(task.taskScheduleDate);
             return taskScheduleDate.ToString("MM") == currentMonth.ToString("MM") && taskScheduleDate.ToString("yyyy") == currentMonth.ToString("yyyy");
         });
-        Console.WriteLine("Month Tasks");
-        foreach (var task in monthTasks)
-        {
-            Console.WriteLine(task.TaskName);
-        }
     }
 
-    private void HandlenewTask() {
-        navManager.NavigateTo("/addnewtask");
+    private void HandlenewTask(string pressedDate)
+    {
+        navManager.NavigateTo($"/addnewtask/{pressedDate}");
+    }
+
+    private void HandleEditTask(UserTask task)
+    {
+        navManager.NavigateTo($"/addnewtask/{task}");
     }
 }
 
