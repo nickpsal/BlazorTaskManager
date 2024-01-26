@@ -1,5 +1,7 @@
 ﻿@page "/edittask"
 @page "/edittask/{task}"
+@inject IHandleJson handleJson
+@inject NavigationManager navManager
 @rendermode InteractiveServer
 
 <h3>EditTask</h3>
@@ -36,14 +38,14 @@
         <ValidationMessage For="@(() => formData.EndTime)" />
     </div>
     <button class="btn btn-primary" @onclick="HandleFormUpdate" type="submit">Update</button>
-    <button class="btn btn-primary" type="submit">Delete</button>
+    <button class="btn btn-primary" @onclick="HandleFormDelete" type="submit">Delete</button>
 </EditForm>
 
 @code {
     [Parameter]
-    public required UserTask task { get; set; }
+    public UserTask? task { get; set; }
     private FormData formData = new();
-
+    private UserTask? oldTask;
     private class FormData
     {
         [Required(ErrorMessage = "Name is required")]
@@ -62,16 +64,29 @@
 
     protected override void OnInitialized()
     {
-        formData.TaskName = task.TaskName;
+        var uri = navManager.ToAbsoluteUri(navManager.Uri);
+        var taskParam = QueryHelpers.ParseQuery(uri.Query)["task"];
+        string decodedTask = WebUtility.UrlDecode(taskParam);
+        task = JsonSerializer.Deserialize<UserTask>(decodedTask);
+        formData.TaskName = task!.TaskName;
         formData.TaskDesc = task.TaskDesc;
         formData.taskSetupDate = DateTime.Parse(task.taskSetupDate);
         formData.taskScheduleDate = DateTime.Parse(task.taskScheduleDate);
         formData.StartTime = task.StartTime;
-        formData.EndTime = task.TaskDesc;
+        formData.EndTime = task.EndTime;
+        oldTask = new(task.TaskName, task.TaskDesc, task.taskSetupDate, task.taskScheduleDate, task.StartTime, task.EndTime);
     }
 
     private void HandleFormUpdate()
     {
-        
+        UserTask newTask = new(formData.TaskName, formData.TaskDesc, formData.taskSetupDate.ToString("dd/MM/yyyy"), formData.taskScheduleDate.ToString("dd/MM/yyyy"), formData.StartTime, formData.EndTime);
+        handleJson.UpdateTask(oldTask!, newTask);
+        navManager.NavigateTo("/");
+    }
+
+    private void HandleFormDelete()
+    {
+        handleJson.deleteTask(oldTask!);
+        navManager.NavigateTo("/");
     }
 }

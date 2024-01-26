@@ -7,6 +7,13 @@ namespace TaskManager.Services
     {
         private static readonly string JsonPath = "Data/tasks.json";
 
+        public async Task deleteTask(UserTask taskdorDeleted)
+        {
+            List<UserTask> tasks = readJsonData();
+            tasks.RemoveAll(task => task.TaskName == taskdorDeleted.TaskName);
+            await exporttoJson(tasks);
+        }
+
         public async Task exporttoJson(List<UserTask> tasks)
         {
             // Read the existing JSON data from the file
@@ -20,7 +27,7 @@ namespace TaskManager.Services
             // Serialize the updated list of UserTask objects to JSON
             string updatedData = JsonSerializer.Serialize(tasks, options);
             // Write the updated JSON data back to the file
-            File.WriteAllText(JsonPath, updatedData);
+            await File.WriteAllTextAsync(JsonPath, updatedData);
         }
 
         public List<UserTask> readJsonData()
@@ -48,7 +55,15 @@ namespace TaskManager.Services
             // Serialize the updated list of UserTask objects to JSON
             string updatedData = JsonSerializer.Serialize(existingTasks, options);
             // Write the updated JSON data back to the file
-            File.WriteAllText(JsonPath, updatedData);
+            await File.WriteAllTextAsync(JsonPath, updatedData);
+        }
+
+        public async Task UpdateTask(UserTask oldTask, UserTask updateTask)
+        {
+            List<UserTask> tasks = readJsonData();
+            tasks.RemoveAll(task => task.TaskName == oldTask.TaskName);
+            tasks.Add(updateTask);
+            await exporttoJson(tasks);
         }
     }
 }

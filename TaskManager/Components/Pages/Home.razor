@@ -37,13 +37,13 @@
                             @day.ToString("    dd    ") <br/>
                             @foreach(var task in monthTasks!)
                             {
-                                if (DateTime.Parse(task.taskSetupDate).ToString("dd") == @day.ToString("dd"))
+                                if (DateTime.Parse(task.taskScheduleDate).ToString("dd") == @day.ToString("dd"))
                                 {
-                                    @task.TaskName
+                                    <button @onclick='() => HandleEditTask(task)'>@task.TaskName</button>
                                     <br/>
                                 }
                             }
-                            @if (DateTime.Now.CompareTo(day) <= 0)
+                            @if (DateTime.Now.CompareTo(day) < 0 || DateTime.Now.ToString("dd") == day.ToString("dd"))
                             {
                                 <button @onclick='() => HandlenewTask(day.ToString("dd"))'><FontAwesomeIcon Icon="@FontAwesome.TableList" /></button>
                             }
@@ -138,7 +138,9 @@
 
     private void HandleEditTask(UserTask task)
     {
-        navManager.NavigateTo($"/addnewtask/{task}");
+        string serializedTask = JsonSerializer.Serialize(task);
+        string encodedTask = WebUtility.UrlEncode(serializedTask);
+        navManager.NavigateTo($"/edittask?task={encodedTask}");
     }
 }
 
