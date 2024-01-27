@@ -43,9 +43,9 @@
                                     <br/>
                                 }
                             }
-                            @if (DateTime.Now.CompareTo(day) < 0 || DateTime.Now.ToString("dd") == day.ToString("dd"))
+                            @if (DateTime.Now.CompareTo(day) < 0 || currentMonth.ToString("dd") == day.ToString("dd"))
                             {
-                                <button @onclick='() => HandlenewTask(day.ToString("dd"))'><FontAwesomeIcon Icon="@FontAwesome.TableList" /></button>
+                                <button @onclick='() => HandlenewTask(day.ToString("dd"),day.ToString("MM"),day.ToString("yyyy"))'><FontAwesomeIcon Icon="@FontAwesome.TableList" /></button>
                             }
                         </td>
                     }
@@ -131,9 +131,9 @@
         });
     }
 
-    private void HandlenewTask(string pressedDate)
+    private void HandlenewTask(string pressedDay, string pressedmonth, string pressedyear)
     {
-        navManager.NavigateTo($"/addnewtask/{pressedDate}");
+        navManager.NavigateTo($"/addnewtask/{pressedyear}/{pressedmonth}/{pressedDay}");
     }
 
     private void HandleEditTask(UserTask task)
@@ -143,5 +143,3 @@
         navManager.NavigateTo($"/edittask?task={encodedTask}");
     }
 }
-
-

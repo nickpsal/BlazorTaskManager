@@ -1,5 +1,5 @@
 ﻿@page "/addnewtask"
-@page "/addnewtask/{pressedDate}"
+@page "/addnewtask/{pressedyear}/{pressedmonth}/{pressedDay}"
 @rendermode InteractiveServer
 @inject IHandleJson handleJson
 @inject IJSRuntime JSRuntime
@@ -22,7 +22,7 @@
     </div>
      <div class="form-group">
         <label for="taskSetupDate">task Setup Date:</label>
-        <InputDate id="taskSetupDate" @bind-Value="formData.taskSetupDate" class="form-control" />
+        <InputDate id="taskSetupDate" @bind-Value="formData.taskSetupDate" class="form-control" readonly/>
         <ValidationMessage For="@(() => formData.taskSetupDate)" />
     </div>
     <div class="form-group">
@@ -45,7 +45,11 @@
 
 @code {
     [Parameter]
-    public string? pressedDate { get; set; }
+    public string? pressedDay { get; set; }
+    [Parameter]
+    public string? pressedmonth { get; set; }
+    [Parameter]
+    public string? pressedyear { get; set; }
     private static DateTime current = DateTime.Now;
     private FormData formData = new();
     private class FormData {
@@ -65,13 +69,15 @@
 
     protected override void OnInitialized()
     {
-        formData.taskScheduleDate = DateTime.Parse(pressedDate + "/" + current.ToString("MM") + "/" + current.ToString("yyyy"));
+        formData.taskSetupDate = current;
+        formData.taskScheduleDate = DateTime.Parse(pressedDay + "/" + pressedmonth + "/" + pressedyear);
     }
     
     private void HandleFormSubmit() 
     {
         if (DateTime.TryParse(formData.StartTime, out DateTime CheckStartTime) && DateTime.TryParse(formData.EndTime, out DateTime CheckEndTime))
         {
+            // Your existing code for valid times
             string name = formData.TaskName;
             string desc = formData.TaskDesc;
             string SetupDate = formData.taskSetupDate.ToString("dd/MM/yyyy");
@@ -82,13 +88,16 @@
             handleJson.savetoJson(newTask);
             navManager.NavigateTo("/");
         }
-        if (!DateTime.TryParse(formData.StartTime, out CheckStartTime))
+        else
         {
-            JSRuntime.InvokeVoidAsync("showPopup", "Warning You dont enter valid Start time");
-        }
-        if (!DateTime.TryParse(formData.EndTime, out CheckEndTime))
-        {
-            JSRuntime.InvokeVoidAsync("showPopup", "Warning You dont enter valid End time");
+            if (!DateTime.TryParse(formData.StartTime, out CheckStartTime))
+            {
+                JSRuntime.InvokeVoidAsync("showPopup", "Warning: You didn't enter a valid Start time");
+            }
+            if (!DateTime.TryParse(formData.EndTime, out CheckEndTime))
+            {
+                JSRuntime.InvokeVoidAsync("showPopup", "Warning: You didn't enter a valid End time");
+            }
         }
     }
 }
